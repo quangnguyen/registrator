@@ -95,7 +95,7 @@ func (b *Bridge) Sync(quiet bool) {
 	if err != nil && quiet {
 		log.Println("error listing containers, skipping sync")
 		return
-	} else if err != nil && !quiet {
+	} else if err != nil {
 		log.Fatal(err)
 	}
 
@@ -127,7 +127,7 @@ func (b *Bridge) Sync(quiet bool) {
 			log.Println("error listing nonExitedContainers, skipping sync", err)
 			return
 		}
-		for listingId, _ := range b.services {
+		for listingId := range b.services {
 			found := false
 			for _, container := range nonExitedContainers {
 				if listingId == container.ID {
@@ -201,8 +201,8 @@ func (b *Bridge) add(containerId string, quiet bool) {
 	ports := make(map[string]ServicePort)
 
 	// Extract configured host port mappings, relevant when using --net=host
-	for port, _ := range container.Config.ExposedPorts {
-		published := []dockerapi.PortBinding{ {"0.0.0.0", port.Port()}, }
+	for port := range container.Config.ExposedPorts {
+		published := []dockerapi.PortBinding{{"0.0.0.0", port.Port()}}
 		ports[string(port)] = servicePort(container, port, published)
 	}
 
@@ -309,7 +309,7 @@ func (b *Bridge) newService(port ServicePort, isgroup bool) *Service {
 				service.IP = containerIp
 			}
 			log.Println("using container IP " + service.IP + " from label '" +
-				b.config.UseIpFromLabel  + "'")
+				b.config.UseIpFromLabel + "'")
 		} else {
 			log.Println("Label '" + b.config.UseIpFromLabel +
 				"' not found in container configuration")
@@ -390,7 +390,8 @@ func (b *Bridge) shouldRemove(containerId string) bool {
 		return true
 	}
 	container, err := b.docker.InspectContainer(containerId)
-	if _, ok := err.(*dockerapi.NoSuchContainer); ok {
+	var noSuchContainer *dockerapi.NoSuchContainer
+	if errors.As(err, &noSuchContainer) {
 		// the container has already been removed from Docker
 		// e.g. probabably run with "--rm" to remove immediately
 		// so its exit code is not accessible

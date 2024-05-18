@@ -125,7 +125,7 @@ func main() {
 			break
 		}
 
-		if err != nil && attempt == *retryAttempts {
+		if attempt == *retryAttempts {
 			assert(err)
 		}
 

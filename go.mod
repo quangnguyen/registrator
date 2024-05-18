@@ -2,6 +2,7 @@ module github.com/quangnguyen/registrator
 
 go 1.22.3
 
+
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-etcd v2.0.0+incompatible

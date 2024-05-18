@@ -5,18 +5,11 @@ WORKDIR /go/src/github.com/quangnguyen/registrator/
 COPY . .
 
 RUN go get -v -t .
-RUN go build \
-        -a -installsuffix cgo \
-		-ldflags "-X main.Version=$(cat VERSION)" \
-		-o bin/registrator
-
+RUN go build -o bin/registrator .
 
 FROM alpine:3.19
 
-ENV APP_HOME /go/src/github.com/quangnguyen/registrator
 RUN apk add --no-cache ca-certificates
-
-WORKDIR $APP_HOME
-COPY --from=builder /go/src/github.com/quangnguyen/registrator/bin/registrator .
+COPY --from=builder /go/src/github.com/quangnguyen/registrator/bin/registrator /bin
 
 ENTRYPOINT ["/bin/registrator"]
