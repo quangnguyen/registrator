@@ -1,13 +1,13 @@
 package skydns2
 
 import (
+	"github.com/quangnguyen/registrator/bridge"
 	"log"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/coreos/go-etcd/etcd"
-	"github.com/gliderlabs/registrator/bridge"
 )
 
 func init() {
