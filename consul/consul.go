@@ -2,6 +2,7 @@ package consul
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-cleanhttp"
 	"log"
 	"net/url"
 	"os"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	consulapi "github.com/hashicorp/consul/api"
-	"github.com/hashicorp/go-cleanhttp"
 	"github.com/quangnguyen/registrator/bridge"
 )
 
@@ -78,15 +78,17 @@ func (r *ConsulAdapter) Ping() error {
 }
 
 func (r *ConsulAdapter) Register(service *bridge.Service) error {
-	registration := new(consulapi.AgentServiceRegistration)
-	registration.ID = service.ID
-	registration.Name = service.Name
-	registration.Port = service.Port
-	registration.Tags = service.Tags
-	registration.Address = service.IP
-	registration.Check = r.buildCheck(service)
-	registration.Meta = service.Attrs
-	return r.client.Agent().ServiceRegister(registration)
+	registration := consulapi.AgentServiceRegistration{
+		ID:      service.ID,
+		Name:    service.Name,
+		Port:    service.Port,
+		Tags:    service.Tags,
+		Address: service.IP,
+		Check:   r.buildCheck(service),
+		Meta:    service.Attrs,
+	}
+
+	return r.client.Agent().ServiceRegister(&registration)
 }
 
 func (r *ConsulAdapter) buildCheck(service *bridge.Service) *consulapi.AgentServiceCheck {
