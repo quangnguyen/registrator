@@ -12,7 +12,7 @@ supports pluggable service registries, which currently includes
 
 Get the latest release, master, or any version of Registrator via Docker Hub:
 
-	$ docker pull quangnguyen/registrator:latest
+	$ docker pull lazylab/registrator:latest
 
 Latest tag always points to the latest release. There is also a `:master` tag
 and version tags to pin to specific releases.
@@ -23,7 +23,7 @@ and version tags to pin to specific releases.
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
-        gliderlabs/registrator:latest \
+        lazylab/registrator:latest \
           consul://localhost:8500
 
 ## CLI Options

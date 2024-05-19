@@ -1,24 +1,27 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
-	"log"
+	log "log/slog"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 
-	dockerapi "github.com/fsouza/go-dockerclient"
-	"github.com/gliderlabs/pkg/usage"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/events"
+	"github.com/docker/docker/client"
 	"github.com/quangnguyen/registrator/bridge"
 )
 
-var Version string
+var version string
 
-var versionChecker = usage.NewChecker("registrator", Version)
+var debug = flag.Bool("debug", false, "Show debug logging message")
 
+var appVersion = flag.Bool("version", false, "Show the application version")
 var hostIp = flag.String("ip", "", "IP for ports mapped to the host")
 var internal = flag.Bool("internal", false, "Use internal ports instead of published ones")
 var explicit = flag.Bool("explicit", false, "Only register containers which have SERVICE_NAME label set")
@@ -32,26 +35,13 @@ var retryAttempts = flag.Int("retry-attempts", 0, "Max retry attempts to establi
 var retryInterval = flag.Int("retry-interval", 2000, "Interval (in millisecond) between retry-attempts.")
 var cleanup = flag.Bool("cleanup", false, "Remove dangling services")
 
-func getopt(name, def string) string {
-	if env := os.Getenv(name); env != "" {
-		return env
-	}
-	return def
-}
-
 func assert(err error) {
 	if err != nil {
-		log.Fatal(err)
+		log.Any("Error", err)
 	}
 }
 
 func main() {
-	if len(os.Args) == 2 && os.Args[1] == "--version" {
-		versionChecker.PrintVersion()
-		os.Exit(0)
-	}
-	log.Printf("Starting registrator %s ...", Version)
-
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s [options] <registry URI>\n\n", os.Args[0])
@@ -59,6 +49,15 @@ func main() {
 	}
 
 	flag.Parse()
+
+	if *appVersion {
+		fmt.Printf("Version: %s\n", version)
+		os.Exit(0)
+	}
+
+	if debug != nil && *debug {
+		log.SetLogLoggerLevel(log.LevelDebug)
+	}
 
 	if flag.NArg() != 1 {
 		if flag.NArg() == 0 {
@@ -73,7 +72,7 @@ func main() {
 	}
 
 	if *hostIp != "" {
-		log.Println("Forcing host IP to", *hostIp)
+		log.Info("Forcing host to", "IP", *hostIp)
 	}
 
 	if (*refreshTtl == 0 && *refreshInterval > 0) || (*refreshTtl > 0 && *refreshInterval == 0) {
@@ -95,14 +94,14 @@ func main() {
 		}
 	}
 
-	docker, err := dockerapi.NewClientFromEnv()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	assert(err)
 
 	if *deregister != "always" && *deregister != "on-success" {
 		assert(errors.New("-deregister must be \"always\" or \"on-success\""))
 	}
 
-	b, err := bridge.New(docker, flag.Arg(0), bridge.Config{
+	b, err := bridge.New(cli, flag.Arg(0), bridge.Config{
 		HostIp:          *hostIp,
 		Internal:        *internal,
 		Explicit:        *explicit,
@@ -118,7 +117,7 @@ func main() {
 
 	attempt := 0
 	for *retryAttempts == -1 || attempt <= *retryAttempts {
-		log.Printf("Connecting to backend (%v/%v)", attempt, *retryAttempts)
+		log.Info("Connecting to backend", "attempt", attempt, "retryAttempts", *retryAttempts)
 
 		err = b.Ping()
 		if err == nil {
@@ -133,10 +132,9 @@ func main() {
 		attempt++
 	}
 
-	// Start event listener before listing containers to avoid missing anything
-	events := make(chan *dockerapi.APIEvents)
-	assert(docker.AddEventListener(events))
-	log.Println("Listening for Docker events ...")
+	eventChanel, errorChanel := cli.Events(context.Background(), types.EventsOptions{})
+
+	log.Info("Listening for container events ...")
 
 	b.Sync(false)
 
@@ -175,15 +173,27 @@ func main() {
 	}
 
 	// Process Docker events
-	for msg := range events {
-		switch msg.Status {
-		case "start":
-			go b.Add(msg.ID)
-		case "die":
-			go b.RemoveOnExit(msg.ID)
+	for {
+		select {
+		case event := <-eventChanel:
+			if event.Type == events.ContainerEventType {
+				switch event.Action {
+				case "start":
+					log.Debug("Handle container event start", "container", event.Actor.ID)
+					go b.Add(event.Actor.ID)
+				case "die":
+					log.Debug("Handle container event die", "container", event.Actor.ID)
+					go b.RemoveOnExit(event.Actor.ID)
+				default:
+					log.Debug("Ignore container event", "action", event.Action, "actor", event.Actor)
+				}
+			} else {
+				log.Debug("Ignore event", "type", event.Type, "action", event.Action, "container", event.Actor.ID)
+			}
+		case err := <-errorChanel:
+			log.Error("Event error", "error", err)
+			close(quit)
+			return
 		}
 	}
-
-	close(quit)
-	log.Fatal("Docker event loop closed") // todo: reconnect?
 }

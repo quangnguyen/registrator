@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"io"
-	"log"
+	log "log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -30,28 +30,28 @@ func (f *Factory) New(uri *url.URL) bridge.RegistryAdapter {
 
 	res, err := http.Get(urls[0] + "/version")
 	if err != nil {
-		log.Fatal("etcd: error retrieving version", err)
+		log.Error("etcd: error retrieving version", "error", err)
 	}
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
 	if match, _ := regexp.Match("0\\.4\\.*", body); match == true {
-		log.Println("etcd: using v0 client")
-		return &EtcdAdapter{client: etcd.NewClient(urls), path: uri.Path}
+		log.Info("etcd: using v0 client")
+		return &Etcd{client: etcd.NewClient(urls), path: uri.Path}
 	}
 
-	return &EtcdAdapter{client2: etcd2.NewClient(urls), path: uri.Path}
+	return &Etcd{client2: etcd2.NewClient(urls), path: uri.Path}
 }
 
-type EtcdAdapter struct {
+type Etcd struct {
 	client  *etcd.Client
 	client2 *etcd2.Client
 
 	path string
 }
 
-func (r *EtcdAdapter) Ping() error {
+func (r *Etcd) Ping() error {
 	r.syncEtcdCluster()
 
 	var err error
@@ -69,7 +69,7 @@ func (r *EtcdAdapter) Ping() error {
 	return nil
 }
 
-func (r *EtcdAdapter) syncEtcdCluster() {
+func (r *Etcd) syncEtcdCluster() {
 	var result bool
 	if r.client != nil {
 		result = r.client.SyncCluster()
@@ -78,11 +78,11 @@ func (r *EtcdAdapter) syncEtcdCluster() {
 	}
 
 	if !result {
-		log.Println("etcd: sync cluster was unsuccessful")
+		log.Info("etcd: sync cluster was unsuccessful")
 	}
 }
 
-func (r *EtcdAdapter) Register(service *bridge.Service) error {
+func (r *Etcd) Register(service *bridge.Service) error {
 	r.syncEtcdCluster()
 
 	path := r.path + "/" + service.Name + "/" + service.ID
@@ -97,12 +97,12 @@ func (r *EtcdAdapter) Register(service *bridge.Service) error {
 	}
 
 	if err != nil {
-		log.Println("etcd: failed to register service:", err)
+		log.Error("etcd: failed to register service", "error", err)
 	}
 	return err
 }
 
-func (r *EtcdAdapter) Deregister(service *bridge.Service) error {
+func (r *Etcd) Deregister(service *bridge.Service) error {
 	r.syncEtcdCluster()
 
 	path := r.path + "/" + service.Name + "/" + service.ID
@@ -115,15 +115,15 @@ func (r *EtcdAdapter) Deregister(service *bridge.Service) error {
 	}
 
 	if err != nil {
-		log.Println("etcd: failed to deregister service:", err)
+		log.Error("etcd: failed to deregister service", "error", err)
 	}
 	return err
 }
 
-func (r *EtcdAdapter) Refresh(service *bridge.Service) error {
+func (r *Etcd) Refresh(service *bridge.Service) error {
 	return r.Register(service)
 }
 
-func (r *EtcdAdapter) Services() ([]*bridge.Service, error) {
+func (r *Etcd) Services() ([]*bridge.Service, error) {
 	return []*bridge.Service{}, nil
 }

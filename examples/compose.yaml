@@ -1,0 +1,70 @@
+name: registrator-test
+
+services:
+
+  consul:
+    image: consul:1.15.4
+    container_name: consul
+    hostname: consul.local
+    networks:
+      dev-network:
+        ipv4_address: 172.28.10.1
+    ports:
+      - 8500:8500
+      - 8600:53/tcp
+      - 8600:53/udp
+    volumes:
+      - ./consul.hcl:/consul/config/consul.hcl
+    healthcheck:
+      test: [ "CMD", "consul", "members" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  registrator:
+    image: lazylab/registrator:latest
+    hostname: registrator.local
+    container_name: registrator
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    command: --internal --explicit consul://consul:8500
+    depends_on:
+      consul:
+        condition: 'service_healthy'
+    networks:
+      dev-network:
+        ipv4_address: 172.28.10.2
+
+  whoami:
+    image: traefik/whoami
+    hostname: whoami.local
+    container_name: whoami
+    labels:
+      - SERVICE_TAGS=whoami
+      - SERVICE_NAME=whoami.local
+      - SERVICE_80_ID=whoami
+    ports:
+      - :80
+    depends_on:
+      - registrator
+    networks:
+      dev-network:
+
+  whoami-no-register:
+    image: traefik/whoami
+    hostname: whoami-no-register.local
+    container_name: whoami-no-register
+    ports:
+      - :80
+    depends_on:
+      - registrator
+    networks:
+      dev-network:
+
+networks:
+  dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

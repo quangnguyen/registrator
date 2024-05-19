@@ -1,11 +1,13 @@
 package bridge
 
 import (
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/go-connections/nat"
 	"strconv"
 	"strings"
 
 	"github.com/cenkalti/backoff"
-	dockerapi "github.com/fsouza/go-dockerclient"
 )
 
 func retry(fn func() error) error {
@@ -54,7 +56,7 @@ func combineTags(tagParts ...string) []string {
 	return tags
 }
 
-func serviceMetaData(config *dockerapi.Config, port string) (map[string]string, map[string]bool) {
+func serviceMetaData(config *container.Config, port string) (map[string]string, map[string]bool) {
 	meta := config.Env
 	for k, v := range config.Labels {
 		meta = append(meta, k+"="+v)
@@ -84,48 +86,48 @@ func serviceMetaData(config *dockerapi.Config, port string) (map[string]string, 
 	return metadata, metadataFromPort
 }
 
-func servicePort(container *dockerapi.Container, port dockerapi.Port, published []dockerapi.PortBinding) ServicePort {
-	var hp, hip, ep, ept, eip, nm string
-	if len(published) > 0 {
-		hp = published[0].HostPort
-		hip = published[0].HostIP
+func servicePort(containerJSON types.ContainerJSON, port nat.Port, portBindings []nat.PortBinding) ServicePort {
+	var hostPort, hostIP, exposedPort, exposedPortProtocol, exposedIP string
+	if len(portBindings) > 0 {
+		hostPort = portBindings[0].HostPort
+		hostIP = portBindings[0].HostIP
 	}
-	if hip == "" {
-		hip = "0.0.0.0"
+	if hostIP == "" {
+		hostIP = "0.0.0.0"
 	}
 
 	//for overlay networks
-	//detect if container use overlay network, than set HostIP into NetworkSettings.Network[string].IPAddress
+	//detect if container use overlay network, then set HostIP into NetworkSettings.Network[string].IPAddress
 	//better to use registrator with -internal flag
-	nm = container.HostConfig.NetworkMode
-	if nm != "bridge" && nm != "default" && nm != "host" {
-		hip = container.NetworkSettings.Networks[nm].IPAddress
+	nm := containerJSON.HostConfig.NetworkMode
+	if !nm.IsBridge() && !nm.IsDefault() && !nm.IsHost() {
+		hostIP = containerJSON.NetworkSettings.Networks[nm.NetworkName()].IPAddress
 	}
 
-	exposedPort := strings.Split(string(port), "/")
-	ep = exposedPort[0]
-	if len(exposedPort) == 2 {
-		ept = exposedPort[1]
+	portProtocol := strings.Split(string(port), "/")
+	exposedPort = portProtocol[0]
+	if len(portProtocol) == 2 {
+		exposedPortProtocol = portProtocol[1]
 	} else {
-		ept = "tcp" // default
+		exposedPortProtocol = "tcp" // default
 	}
 
 	// Nir: support docker NetworkSettings
-	eip = container.NetworkSettings.IPAddress
-	if eip == "" {
-		for _, network := range container.NetworkSettings.Networks {
-			eip = network.IPAddress
+	exposedIP = containerJSON.NetworkSettings.IPAddress
+	if exposedIP == "" {
+		for _, network := range containerJSON.NetworkSettings.Networks {
+			exposedIP = network.IPAddress
 		}
 	}
 
 	return ServicePort{
-		HostPort:          hp,
-		HostIP:            hip,
-		ExposedPort:       ep,
-		ExposedIP:         eip,
-		PortType:          ept,
-		ContainerID:       container.ID,
-		ContainerHostname: container.Config.Hostname,
-		container:         container,
+		HostPort:            hostPort,
+		HostIP:              hostIP,
+		ExposedPort:         exposedPort,
+		ExposedIP:           exposedIP,
+		ExposedPortProtocol: exposedPortProtocol,
+		ContainerID:         containerJSON.ID,
+		ContainerHostname:   containerJSON.Config.Hostname,
+		container:           &containerJSON,
 	}
 }
