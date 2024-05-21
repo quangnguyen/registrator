@@ -2,17 +2,25 @@ name: Release
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - 'develop'
+      - 'release/*'
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'develop'
+      - 'release/*'
+      - 'feat/*'
+      - 'fix/*'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
   DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+  DOCKER_HUB_REPO: lazylab/registrator
 
 jobs:
   goreleaser:
+    if: github.ref == 'refs/heads/release'
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -31,17 +39,48 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  build_images:
+    strategy:
+      matrix:
+        config:
+          - { platform: linux, arch: amd64, version: "" }
+          - { platform: linux, arch: arm64, version: "" }
+          - { platform: linux, arch: arm, version: "" }
+          - { platform: linux, arch: ppc64le, version: "" }
+          - { platform: linux, arch: s390x, version: "" }
+          - { platform: windows, arch: amd64, version: 1809 }
+          - { platform: windows, arch: amd64, version: ltsc2022 }
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          endpoint: builders
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: lazylab/registrator:latest
+        run: |
+          if [[ "${GITHUB_REF_NAME}" =~ ^release/.*$ ]]; then
+            # use the release branch name as the tag for release branches
+            # for instance, release/2.19 becomes 2.19
+            CONTAINER_IMAGE_TAG=$(echo $GITHUB_REF_NAME | cut -d "/" -f 2)
+          elif [ "${GITHUB_EVENT_NAME}" == "pull_request" ]; then
+            # use pr${{ github.event.number }} as the tag for pull requests
+            # for instance, pr123
+            CONTAINER_IMAGE_TAG="pr${{ github.event.number }}"
+          else
+            # replace / with - in the branch name
+            # for instance, feature/1.0.0 -> feature-1.0.0
+            CONTAINER_IMAGE_TAG=$(echo $GITHUB_REF_NAME | sed 's/\//-/g')
+          fi
+          
+          echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}-${{ matrix.config.platform }}${{ matrix.config.version }}-${{ matrix.config.arch }}" >> $GITHUB_ENV
+      - name: 'build and push docker images'
+        run: |
+          docker buildx build --output=type=registry --platform ${{ matrix.config.platform }}/${{ matrix.config.arch }} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" -f Dockerfile .
