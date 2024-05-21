@@ -178,10 +178,10 @@ func main() {
 		case event := <-eventChanel:
 			if event.Type == events.ContainerEventType {
 				switch event.Action {
-				case "start":
+				case events.ActionStart:
 					log.Debug("Handle container event start", "container", event.Actor.ID)
 					go b.Add(event.Actor.ID)
-				case "die":
+				case events.ActionDie:
 					log.Debug("Handle container event die", "container", event.Actor.ID)
 					go b.RemoveOnExit(event.Actor.ID)
 				default:
