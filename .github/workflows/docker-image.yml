@@ -48,15 +48,18 @@ jobs:
           - { platform: linux, arch: arm, version: "" }
           - { platform: linux, arch: ppc64le, version: "" }
           - { platform: linux, arch: s390x, version: "" }
-          - { platform: windows, arch: amd64, version: 1809 }
-          - { platform: windows, arch: amd64, version: ltsc2022 }
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: '[preparation] set up qemu'
+        uses: docker/setup-qemu-action@v3.0.0
+      - name: '[preparation] set up docker context for buildx'
+        run: docker context create builders
+      - name: '[preparation] set up docker buildx'
+        uses: docker/setup-buildx-action@v3.0.0
         with:
           endpoint: builders
       - name: Login to Docker Hub
@@ -81,6 +84,6 @@ jobs:
           fi
           
           echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}-${{ matrix.config.platform }}${{ matrix.config.version }}-${{ matrix.config.arch }}" >> $GITHUB_ENV
-      - name: 'build and push docker images'
+      - name: build and push docker images
         run: |
-          docker buildx build --output=type=registry --platform ${{ matrix.config.platform }}/${{ matrix.config.arch }} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" -f Dockerfile .
+          docker buildx build --output=type=registry --platform ${{ matrix.config.platform }}/${{ matrix.config.arch }} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
