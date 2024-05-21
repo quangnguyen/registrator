@@ -24,7 +24,7 @@ and version tags to pin to specific releases.
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
         lazylab/registrator:latest \
-          consul://localhost:8500
+        consul://localhost:8500
 
 ## CLI Options
 ```
