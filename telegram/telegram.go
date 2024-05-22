@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	telegram "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/quangnguyen/registrator/bridge"
@@ -31,12 +32,16 @@ func (f *Factory) New(uri *url.URL) bridge.RegistryAdapter {
 		log.Error("Invalid chat ID", "error", err)
 	}
 
-	return &Telegram{bot: bot, chatID: chatID}
+	t := &Telegram{bot: bot, chatID: chatID, messageQueue: make(chan string, 100)}
+	go t.processMessageQueue()
+
+	return t
 }
 
 type Telegram struct {
-	bot    *telegram.BotAPI
-	chatID int64
+	bot          *telegram.BotAPI
+	chatID       int64
+	messageQueue chan string
 }
 
 func (t *Telegram) Ping() error {
@@ -50,17 +55,17 @@ func (t *Telegram) Ping() error {
 }
 
 func (t *Telegram) Register(service *bridge.Service) error {
-	err := t.sendMessage("ONLINE: Service " + service.Name + " with ip " + service.IP + " goes online")
-	if err == nil {
-		registeredServices.Store(service.Name, service.ID)
-	}
-	return err
+	message := "ONLINE: Service " + service.Name + " with ip " + service.IP + " goes online"
+	t.messageQueue <- message
+	registeredServices.Store(service.Name, service.ID)
+	return nil
 }
 
 func (t *Telegram) Deregister(service *bridge.Service) error {
 	if _, serviceID := registeredServices.LoadAndDelete(service.Name); serviceID {
-		err := t.sendMessage("OFFLINE: Service " + service.Name + " with ip " + service.IP + " goes offline")
-		return err
+		message := "OFFLINE: Service " + service.Name + " with ip " + service.IP + " goes offline"
+		t.messageQueue <- message
+		return nil
 	}
 	return nil
 }
@@ -79,12 +84,38 @@ func (t *Telegram) Services() ([]*bridge.Service, error) {
 	return services, nil
 }
 
-func (t *Telegram) sendMessage(text string) error {
+func (t *Telegram) processMessageQueue() {
+	var messages []string
+	timer := time.NewTimer(time.Second * 5)
+	for {
+		select {
+		case msg := <-t.messageQueue:
+			messages = append(messages, msg)
+		case <-timer.C:
+			if len(messages) > 0 {
+				t.sendMessageBatch(messages)
+				messages = nil
+			}
+			timer.Reset(time.Second * 1)
+		}
+	}
+}
+
+func (t *Telegram) sendMessageBatch(messages []string) {
+	if len(messages) == 0 {
+		return
+	}
+	messageText := ""
+	for _, msg := range messages {
+		messageText += msg + "\n"
+	}
+	t.sendMessage(messageText)
+}
+
+func (t *Telegram) sendMessage(text string) {
 	msg := telegram.NewMessage(t.chatID, text)
 	_, err := t.bot.Send(msg)
 	if err != nil {
 		log.Error("Could not send message to Telegram", "error", err)
-		return err
 	}
-	return nil
 }

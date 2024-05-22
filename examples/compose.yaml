@@ -23,12 +23,12 @@ services:
       start_period: 10s
 
   registrator:
-    image: lazylab/registrator:latest
+    image:  docker.io/lazylab/registrator:latest
     hostname: registrator.local
     container_name: registrator
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
-    command: --internal --explicit consul://consul:8500
+    command: --internal --explicit --debug consul://consul:8500
     depends_on:
       consul:
         condition: 'service_healthy'
@@ -44,6 +44,21 @@ services:
       - SERVICE_TAGS=whoami
       - SERVICE_NAME=whoami.local
       - SERVICE_80_ID=whoami
+    ports:
+      - :80
+    depends_on:
+      - registrator
+    networks:
+      dev-network:
+
+  whoami2:
+    image: traefik/whoami
+    hostname: whoami2.local
+    container_name: whoami2
+    labels:
+      - SERVICE_TAGS=whoami2
+      - SERVICE_NAME=whoami2.local
+      - SERVICE_80_ID=whoami2
     ports:
       - :80
     depends_on:

@@ -5,17 +5,12 @@ WORKDIR /go/src/github.com/quangnguyen/registrator/
 COPY . .
 
 RUN go get -v -t .
-RUN go build -o bin/registrator -ldflags="-X main.version=$VERSION" .
+RUN go build -o bin/registrator -ldflags="-X main.version=$VERSION -v -s" .
 
-FROM alpine:3.19
-
-RUN apk add --no-cache ca-certificates
+FROM gcr.io/distroless/static-debian12
 
 WORKDIR /app
 
 COPY --from=builder /go/src/github.com/quangnguyen/registrator/bin/registrator /bin
-COPY --from=builder /go/src/github.com/quangnguyen/registrator/entrypoint.sh ./
 
-RUN chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/registrator"]
