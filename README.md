@@ -19,12 +19,25 @@ and version tags to pin to specific releases.
 
 ## Using Registrator
 
-    $ docker run -d \
+### Consul
+```shell$ docker run -d \
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
         lazylab/registrator:latest \
         --debug consul://localhost:8500
+```
+
+### Telegram
+```shell
+$ docker run -d \
+    --name=registrator \
+    --net=host \
+    --volume=/var/run/docker.sock:/tmp/docker.sock \
+    -e TELEGRAM_BOT_TOKEN={PUT_YOUR_TOKEN_HERE} \
+    lazylab/registrator:latest \
+    --debug telegram://{PUT_YOUR_CHAT_ID_HERE}
+```
 
 ## CLI Options
 ```
