@@ -19,18 +19,32 @@ and version tags to pin to specific releases.
 
 ## Using Registrator
 
-    $ docker run -d \
+### Consul
+```shell$ docker run -d \
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
         lazylab/registrator:latest \
         consul://localhost:8500
+```
+
+### Telegram
+```shell
+$ docker run -d \
+    --name=registrator \
+    --net=host \
+    --volume=/var/run/docker.sock:/tmp/docker.sock \
+    -e TELEGRAM_BOT_TOKEN={PUT_YOUR_TOKEN_HERE} \
+    lazylab/registrator:latest \
+    --debug telegram://{PUT_YOUR_CHAT_ID_HERE}
+```
 
 ## CLI Options
 ```
 Usage of /bin/registrator:
   /bin/registrator [options] <registry URI>
 
+  -debug=false: Show log message on level debug
   -cleanup=false: Remove dangling services
   -deregister="always": Deregister exited services "always" or "on-success"
   -explicit=false: Only register containers which have SERVICE_NAME label set
@@ -47,7 +61,7 @@ Usage of /bin/registrator:
 ## Contributing
 
 Pull requests are welcome! We recommend getting feedback before starting by
-opening a issue.
+opening an issue.
 
 ## License
 
