@@ -20,7 +20,8 @@ and version tags to pin to specific releases.
 ## Using Registrator
 
 ### Consul
-```shell$ docker run -d \
+```shell
+$ docker run -d \
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
