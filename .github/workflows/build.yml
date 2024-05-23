@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches:
+      - 'main'
       - 'develop'
       - 'release/*'
   pull_request:
@@ -20,7 +21,7 @@ env:
 
 jobs:
   goreleaser:
-    if: github.ref == 'refs/heads/release'
+    if: github.ref == 'refs/heads/main'
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
