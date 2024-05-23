@@ -67,7 +67,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+      - name: Set container image tag
         run: |
           if [[ "${GITHUB_REF_NAME}" =~ ^release/.*$ ]]; then
             # use the release branch name as the tag for release branches
@@ -84,6 +84,10 @@ jobs:
           fi
           
           echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}-${{ matrix.config.platform }}${{ matrix.config.version }}-${{ matrix.config.arch }}" >> $GITHUB_ENV
-      - name: build and push docker images
+      - name: Build and push docker images
         run: |
           docker buildx build --output=type=registry --platform ${{ matrix.config.platform }}/${{ matrix.config.arch }} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
+      - name: Tag and push latest
+        if: ${{ github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/') }}
+        run: |
+          docker buildx imagetools create -t ${DOCKER_HUB_REPO}:latest ${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}

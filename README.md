@@ -17,16 +17,18 @@ Get the latest release, master, or any version of Registrator via Docker Hub:
 Latest tag always points to the latest release. There is also a `:master` tag
 and version tags to pin to specific releases.
 
+[Dockerhub](https://hub.docker.com/r/lazylab/registrator)
+
 ## Using Registrator
 
 ### Consul
 ```shell
 $ docker run -d \
-        --name=registrator \
-        --net=host \
-        --volume=/var/run/docker.sock:/tmp/docker.sock \
-        lazylab/registrator:latest \
-        --debug consul://localhost:8500
+    --name=registrator \
+    --net=host \
+    --volume=/var/run/docker.sock:/tmp/docker.sock \
+    lazylab/registrator:latest \
+    --debug consul://localhost:8500
 ```
 
 ### Telegram
