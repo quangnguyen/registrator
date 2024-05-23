@@ -78,7 +78,7 @@ jobs:
           echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}" >> $GITHUB_ENV
       - name: Build and push docker images
         run: |
-          platforms="linux/amd64,linux/i386,linux/arm64,linux/arm/v7,linux/arm/v6,linux/arm/v5,linux/ppc64le,linux/s390x"
+          platforms="linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x"
           docker buildx build --output=type=registry --platform ${platforms} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
           echo "IMAGE_SHA=$(docker buildx imagetools inspect --raw ${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG} | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       - name: Tag and push latest
