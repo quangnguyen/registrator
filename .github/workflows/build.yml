@@ -40,14 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_images:
-    strategy:
-      matrix:
-        config:
-          - { platform: linux, arch: amd64, version: "" }
-          - { platform: linux, arch: arm64, version: "" }
-          - { platform: linux, arch: arm, version: "" }
-          - { platform: linux, arch: ppc64le, version: "" }
-          - { platform: linux, arch: s390x, version: "" }
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -67,7 +59,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push
+      - name: Set container image tag
         run: |
           if [[ "${GITHUB_REF_NAME}" =~ ^release/.*$ ]]; then
             # use the release branch name as the tag for release branches
@@ -83,7 +75,12 @@ jobs:
             CONTAINER_IMAGE_TAG=$(echo $GITHUB_REF_NAME | sed 's/\//-/g')
           fi
           
-          echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}-${{ matrix.config.platform }}${{ matrix.config.version }}-${{ matrix.config.arch }}" >> $GITHUB_ENV
-      - name: build and push docker images
+          echo "CONTAINER_IMAGE_TAG=${CONTAINER_IMAGE_TAG}" >> $GITHUB_ENV
+      - name: Build and push docker images
         run: |
-          docker buildx build --output=type=registry --platform ${{ matrix.config.platform }}/${{ matrix.config.arch }} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
+          platforms="linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x"
+          if [[ "${GITHUB_REF_NAME}" == "develop" || "${GITHUB_REF_NAME}" =~ ^release/.*$ ]]; then
+            docker buildx build --output=type=registry --platform ${platforms} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" -t "${DOCKER_HUB_REPO}:latest" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
+          else
+            docker buildx build --output=type=registry --platform ${platforms} -t "${DOCKER_HUB_REPO}:${CONTAINER_IMAGE_TAG}" --build-arg VERSION=${CONTAINER_IMAGE_TAG} -f Dockerfile .
+          fi
