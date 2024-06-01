@@ -45,7 +45,7 @@ $ docker run -d \
     --name=registrator \
     --net=host \
     --volume=/var/run/docker.sock:/tmp/docker.sock \
-    lazylab/registrator:latest \
+    docker.io/lazylab/registrator:latest \
       consul://localhost:8500
 ```
 There's a bit going on here in the Docker run arguments. First, we run the

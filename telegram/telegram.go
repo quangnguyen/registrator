@@ -86,7 +86,7 @@ func (t *Telegram) Services() ([]*bridge.Service, error) {
 
 func (t *Telegram) processMessageQueue() {
 	var messages []string
-	timer := time.NewTimer(time.Second * 5)
+	timer := time.NewTimer(time.Second * 3)
 	for {
 		select {
 		case msg := <-t.messageQueue:

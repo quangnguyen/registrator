@@ -18,3 +18,12 @@ telemetry {
 }
 
 leave_on_terminate = true
+
+acl {
+  enabled = true
+  default_policy = "deny"
+  enable_token_persistence = true
+  tokens {
+    master = "super_secret"
+  }
+}

@@ -7,7 +7,7 @@ automation, running everywhere is ironically simpler than running once somewhere
 
 ## Running Registrator
 
-    docker run [docker options] lazylab/registrator[:tag] [options] <registry uri>
+    docker run [docker options] docker.io/lazylab/registrator[:tag] [options] <registry uri>
 
 Registrator requires and recommends some Docker options, has its own set of options
 and then requires a Registry URI. Here is a typical way to run Registrator:
@@ -16,7 +16,7 @@ and then requires a Registry URI. Here is a typical way to run Registrator:
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
-        lazylab/registrator:latest \
+        docker.io/lazylab/registrator:latest \
           consul://localhost:8500
 
 ## Docker Options
@@ -32,15 +32,15 @@ hostname (`-h $HOSTNAME`) and using the `-ip` Registrator option below.
 ## Registrator Options
 
 Option                           | Since | Description
-------                           | ----- | -----------
-`-cleanup`                       | v7    | Cleanup dangling services
-`-deregister <mode>`             | v6    | Deregister exited services "always" or "on-success". Default: always
+------                           |-------| -----------
+`-cleanup`                       |       | Cleanup dangling services
+`-deregister <mode>`             |       | Deregister exited services "always" or "on-success". Default: always
 `-internal`                      |       | Use exposed ports instead of published ports
 `-ip <ip address>`               |       | Force IP address used for registering services
-`-resync <seconds>`              | v6    | Frequency all services are resynchronized. Default: 0, never
-`-retry-attempts <number>`       | v7    | Max retry attempts to establish a connection with the backend
-`-retry-interval <milliseconds>` | v7    | Interval (in millisecond) between retry-attempts
-`-tags <tags>`                   | v5    | Force comma-separated tags on all registered services
+`-resync <seconds>`              |       | Frequency all services are resynchronized. Default: 0, never
+`-retry-attempts <number>`       |       | Max retry attempts to establish a connection with the backend
+`-retry-interval <milliseconds>` |       | Interval (in millisecond) between retry-attempts
+`-tags <tags>`                   |       | Force comma-separated tags on all registered services
 `-ttl <seconds>`                 |       | TTL for services. Default: 0, no expiry (supported backends only)
 `-ttl-refresh <seconds>`         |       | Frequency service TTLs are refreshed (supported backends only)
 `-useIpFromLabel <label>`        |       | Uses the IP address stored in the given label, which is assigned to a container, for registration with Consul
@@ -71,14 +71,14 @@ or you will see warnings in the consul docker container
 
     [WARN] consul.catalog: Register of service 'redis' on 'hostname' denied due to ACLs
 
-The ACL token is passed in through docker in an environment variable called `CONSUL_HTTP_TOKEN`.
+The ACL token is passed in through docker in an environment variable called `CONSUL_ACL_TOKEN`.
 
     $ docker run -d \
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
-        -e CONSUL_HTTP_TOKEN=<your acl token> \
-        lazylab/registrator:latest \
+        -e CONSUL_ACL_TOKEN=<your acl token> \
+        docker.io/lazylab/registrator:latest \
           consul://localhost:8500
 
 ## Registry URI

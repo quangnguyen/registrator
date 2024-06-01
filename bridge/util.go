@@ -6,13 +6,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"strconv"
 	"strings"
-
-	"github.com/cenkalti/backoff"
 )
-
-func retry(fn func() error) error {
-	return backoff.Retry(fn, backoff.NewExponentialBackOff())
-}
 
 func mapDefault(m map[string]string, key, default_ string) string {
 	v, ok := m[key]
