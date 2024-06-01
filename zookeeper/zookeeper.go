@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-zookeeper/zk"
 	"github.com/quangnguyen/registrator/bridge"
-	"github.com/samuel/go-zookeeper/zk"
 )
 
 func init() {

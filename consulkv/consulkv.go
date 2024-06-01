@@ -4,6 +4,7 @@ import (
 	log "log/slog"
 	"net"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,11 @@ type Factory struct{}
 
 func (f *Factory) New(uri *url.URL) bridge.RegistryAdapter {
 	config := consul.DefaultConfig()
+	aclToken := os.Getenv("CONSUL_ACL_TOKEN")
+	if aclToken != "" {
+		config.Token = aclToken
+	}
+
 	path := uri.Path
 	if uri.Scheme == "consulkv-unix" {
 		spl := strings.SplitN(uri.Path, ":", 2)

@@ -16,16 +16,18 @@ services:
     volumes:
       - ./consul.hcl:/consul/config/consul.hcl
     healthcheck:
-      test: [ "CMD", "consul", "members" ]
-      interval: 30s
-      timeout: 10s
+      test: [ "CMD", "curl", "-X", "GET", "localhost:8500/v1/status/leader" ]
+      interval: 5s
+      timeout: 3s
       retries: 5
-      start_period: 10s
+      start_period: 3s
 
   registrator:
     image:  docker.io/lazylab/registrator:latest
     hostname: registrator.local
     container_name: registrator
+    environment:
+      - CONSUL_ACL_TOKEN=super_secret
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock
     command: --internal --explicit --debug consul://consul:8500

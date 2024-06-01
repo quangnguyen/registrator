@@ -24,6 +24,9 @@ When using the `consul-tls` scheme, registrator communicates with Consul through
  * `CONSUL_CLIENT_CERT` : Certificate file location
  * `CONSUL_CLIENT_KEY` : Key location
 
+If your Consul is secured with ACL tokens, you need to set the following environment variable:
+ * `CONSUL_ACL_TOKEN` : The ACL token for Consul
+
 For more information on the Consul check parameters below, see the [API documentation](https://www.consul.io/api/agent/check.html#register-check).
 
 ### Consul HTTP Check

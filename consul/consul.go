@@ -32,6 +32,11 @@ type Factory struct{}
 
 func (f *Factory) New(uri *url.URL) bridge.RegistryAdapter {
 	config := consul.DefaultConfig()
+	aclToken := os.Getenv("CONSUL_ACL_TOKEN")
+	if aclToken != "" {
+		config.Token = aclToken
+	}
+
 	if uri.Scheme == "consul-unix" {
 		config.Address = strings.TrimPrefix(uri.String(), "consul-")
 	} else if uri.Scheme == "consul-tls" {

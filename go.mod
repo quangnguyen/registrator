@@ -3,13 +3,13 @@ module github.com/quangnguyen/registrator
 go 1.22.3
 
 require (
-	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/coreos/go-etcd v2.0.0+incompatible
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/go-zookeeper/zk v1.0.3
 	github.com/hashicorp/consul/api v1.28.3
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/coreos/go-etcd.v0 v0.4.6
 )
@@ -25,7 +25,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/hashicorp/consul/proto-public v0.6.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
