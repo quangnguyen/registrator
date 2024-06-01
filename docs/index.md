@@ -15,7 +15,7 @@ supports pluggable service registries, which currently includes
 
 Get the latest release, master, or any version of Registrator via [Docker Hub](https://hub.docker.com/r/lazylab/registrator):
 
-	$ docker pull lazylab/registrator:latest
+	$ docker pull docker.io/lazylab/registrator:latest
 
 Latest tag always points to the latest release. There is also a `:master` tag
 and version tags to pin to specific releases.
@@ -31,7 +31,7 @@ looks like this:
         --name=registrator \
         --net=host \
         --volume=/var/run/docker.sock:/tmp/docker.sock \
-        lazylab/registrator:latest \
+        docker.io/lazylab/registrator:latest \
         consul://localhost:8500
 
 ## Contributing

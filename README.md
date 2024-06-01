@@ -12,7 +12,7 @@ supports pluggable service registries, which currently includes
 
 Get the latest release, master, or any version of Registrator via Docker Hub:
 
-	$ docker pull lazylab/registrator:latest
+	$ docker pull docker.io/lazylab/registrator:latest
 
 Latest tag always points to the latest release. There is also a `:master` tag
 and version tags to pin to specific releases.
@@ -27,7 +27,7 @@ $ docker run -d \
     --name=registrator \
     --net=host \
     --volume=/var/run/docker.sock:/tmp/docker.sock \
-    lazylab/registrator:latest \
+    docker.io/lazylab/registrator:latest \
     --debug consul://localhost:8500
 ```
 
@@ -40,7 +40,7 @@ $ docker run -d \
     --net=host \
     --volume=/var/run/docker.sock:/tmp/docker.sock \
     -e TELEGRAM_BOT_TOKEN={PUT_YOUR_TOKEN_HERE} \
-    lazylab/registrator:latest \
+    docker.io/lazylab/registrator:latest \
     --debug telegram://{PUT_YOUR_CHAT_ID_HERE}
 ```
 
