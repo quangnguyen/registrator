@@ -17,7 +17,7 @@ services:
       - ./consul.hcl:/consul/config/consul.hcl
     healthcheck:
       test: [ "CMD", "curl", "-X", "GET", "localhost:8500/v1/status/leader" ]
-      interval: 5s
+      interval: 3s
       timeout: 3s
       retries: 5
       start_period: 3s
