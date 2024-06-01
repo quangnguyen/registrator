@@ -1,11 +1,9 @@
 # Registrator
 
-Service registry bridge for Docker, sponsored by [Weave](http://weave.works).
+Service registry bridge for Docker.
 
-[![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://registry.hub.docker.com/u/quangnguyen/registrator/)
-[![ImageLayers Size](https://img.shields.io/imagelayers/image-size/quangnguyen/registrator/latest.svg)](https://imagelayers.io/?images=gliderlabs%2Fregistrator:latest)
-[![IRC Channel](https://img.shields.io/badge/irc-%23gliderlabs-blue.svg)](https://kiwiirc.com/client/irc.freenode.net/#gliderlabs)
-<br /><br />
+[![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/lazylab/registrator)
+
 
 Registrator automatically registers and deregisters services for any Docker
 container by inspecting containers as they come online. Registrator
@@ -15,7 +13,7 @@ supports pluggable service registries, which currently includes
 
 ## Getting Registrator
 
-Get the latest release, master, or any version of Registrator via [Docker Hub](https://registry.hub.docker.com/u/quangnguyen/registrator/):
+Get the latest release, master, or any version of Registrator via [Docker Hub](https://hub.docker.com/r/lazylab/registrator):
 
 	$ docker pull lazylab/registrator:latest
 
@@ -39,20 +37,12 @@ looks like this:
 ## Contributing
 
 Pull requests are welcome! We recommend getting feedback before starting by
-opening a [GitHub issue](https://github.com/quangnguyen/registrator/issues) or
-discussing in [Slack](http://glider-slackin.herokuapp.com/).
+opening a [GitHub issue](https://github.com/quangnguyen/registrator/issues)
 
 Also check out our Developer Guide on [Contributing Backends](dev/backends.md)
 and [Staging Releases](dev/releases.md).
 
 ## Sponsors and Thanks
-
-Ongoing support of this project is made possible by [Weave](http://weave.works), the easiest way to connect, observe and control your containers. Big thanks to Michael Crosby for
-[skydock](https://github.com/crosbymichael/skydock) and the Consul mailing list
-for inspiration.
-
-For a full list of sponsors, see
-[SPONSORS](https://github.com/quangnguyen/registrator/blob/master/SPONSORS).
 
 ## License
 

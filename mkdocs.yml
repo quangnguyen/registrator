@@ -1,5 +1,4 @@
 site_name: Registrator
-site_url: https://gliderlabs.com/registrator
 repo_url: https://github.com/quangnguyen/registrator
 dev_addr: 0.0.0.0:8000
 theme_dir: /pagebuilder/theme

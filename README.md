@@ -31,6 +31,8 @@ $ docker run -d \
     --debug consul://localhost:8500
 ```
 
+If a Consul ACL token is required, you can provide it through the environment variable `CONSUL_ACL_TOKEN`.
+
 ### Telegram
 ```shell
 $ docker run -d \
